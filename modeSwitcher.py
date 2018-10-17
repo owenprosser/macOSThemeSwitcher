@@ -1,17 +1,25 @@
 from subprocess import Popen, PIPE
-import datetime, ephem
+import datetime, time ,ephem, json
+import requests
 
 darkMode = None
 dayTime = None
+pause = 5 #Number of minutes between updates
+useGeoIP = False
+lat = None
+long = None
 
 def sunUp():
    o = ephem.Observer()
    o.long = -0.540579
    o.lat = 53.230686
+   if useGeoIP != False:
+       o.long = long
+       o.lat = lat
    o.date = datetime.datetime.now()#'2018/10/15 22:30:00'
    s = ephem.Sun()
    s.compute(o)
-   return s.alt > 0
+   return s.alt < 0
 
 def getCurrentMode():
     scpt = '''
@@ -27,7 +35,7 @@ def getCurrentMode():
         '''
 
     p = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate(scpt)
+    stdout, stderr = (p.communicate(scpt))
 
     print (stdout[0])
 
@@ -37,7 +45,6 @@ def getCurrentMode():
     else:
         print ("Dark mode off")
         return False
-
 
 def changeMode():
     scpt = '''
@@ -55,18 +62,33 @@ def changeMode():
     p = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate(scpt)
 
-dayTime = sunUp()
+def GeoIP():
+    send_url = 'http://api.ipstack.com/check?access_key=ebb35d3b8119a4d82aa93285578c2196'
+    r = requests.get(send_url)
+    j = json.loads(r.text)
+    latitude = j['latitude']
+    longitude = j['longitude']
+    lat = int(latitude)
+    long = int(longitude)
+    print (latitude,longitude)
+    return(latitude,longitude)
 
-darkMode = getCurrentMode()
-print(dayTime)
+while True:
+    if useGeoIP == True:
+        (lat, long) = GeoIP()
 
-if dayTime == True and darkMode == True:
-    print ("DayTime but in Dark Mode")
-    changeMode()
-elif dayTime == False and darkMode == False:
-    print("NightTime but in LightMode")
-    changeMode()
-elif dayTime == True and darkMode == True:
-    print("In correct Mode. Daytime with LightMode")
-elif dayTime == False and darkMode == True:
-    print("In correct Mode. NightTimetime with DarkMode")
+    print(type(long))
+    dayTime = sunUp()
+    darkMode = getCurrentMode()
+
+    if dayTime == True and darkMode == True:
+        print ("DayTime but in Dark Mode")
+        changeMode()
+    elif dayTime == False and darkMode == False:
+        print("NightTime but in LightMode")
+        changeMode()
+    elif dayTime == True and darkMode == True:
+        print("In correct Mode. Daytime with LightMode")
+    elif dayTime == False and darkMode == True:
+        print("In correct Mode. NightTime with DarkMode")
+    time.sleep(60*pause)
