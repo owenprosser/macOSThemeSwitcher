@@ -22,11 +22,9 @@ def sunUp():
    print(o.date)
    s = ephem.Sun()
    s.compute(o)
+   print(s.alt)
 
-   if s.alt > 0:
-       return True
-   elif s.alt < 0:
-       return False
+   return  s.alt < 0
 
 def getCurrentMode():
     scpt = '''
@@ -40,15 +38,15 @@ def getCurrentMode():
 
     end tell
         '''
-
     p = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = (p.communicate(scpt.encode()))
-
-    if stdout[0] == 't':
-        #print ("Dark mode on")
+    stdout = stdout.decode()
+    print(stdout)
+    if stdout == 'true\n':
+        print ("Dark mode on")
         return True
-    else:
-        #print ("Dark mode off")
+    elif stdout == 'false\n':
+        print ("Dark mode off")
         return False
 
 def changeMode():
@@ -77,7 +75,6 @@ def GeoIP():
     long = int(longitude)
     print("Location from IP Address %s %s" % (lat, long))
     return(latitude,longitude)
-
 
 if useGeoIP == True:
     (lat, long) = GeoIP()
