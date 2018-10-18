@@ -29,13 +29,9 @@ def sunUp():
 def getCurrentMode():
     scpt = '''
         tell application "System Events"
-
-    	tell appearance preferences
-
-    		get dark mode
-
-    	end tell
-
+      tell appearance preferences
+        get dark mode
+      end tell
     end tell
         '''
     p = Popen(['osascript', '-'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
@@ -46,19 +42,15 @@ def getCurrentMode():
         print ("Dark mode on")
         return True
     elif stdout == 'false\n':
-        print ("Dark mode off")
+        print ("LightMode mode on")
         return False
 
 def changeMode():
     scpt = '''
         tell application "System Events"
-
-    	tell appearance preferences
-
-    		set dark mode to not dark mode
-
-    	end tell
-
+      tell appearance preferences
+        set dark mode to not dark mode
+      end tell
     end tell
         '''
 
